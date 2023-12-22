@@ -4,14 +4,18 @@ Experimental repository for exploring RO-Crates using Datasette -- ATM this is a
 
 ## Installation (Macos)
 
-- Make a virtual environment:
+- Make a virtual environment locally:
   `python3 -venv venv`
-- Activate the virtual environment (optional the Makefile should work without activating)
+- Activate the virtual environment 
   `. venv/bin/activate`
+- Install 
+  `pip3 install -r requirements.txt`
+
 
 
 ## Usage
 
+There's a sample dataset included which should serve as an example of usage:
 
 ```
 make sample
