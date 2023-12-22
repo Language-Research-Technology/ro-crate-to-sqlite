@@ -1,0 +1,118 @@
+{% set vars = namespace(myid = request.args.get('entity')) %}
+
+{% if not
+vars.myid %} {% for root_id in sql("select id from root") %} {% set vars.myid =
+root_id.id %} {% endfor %} {% endif %}
+
+{{vars.myid}}
+
+
+{%set vars.this = sql("select name, types from entities where id = ?" , [vars.myid])[0] %}
+
+<!--
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+ <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+-->
+
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css"
+/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+
+<h2><a href="/browse/entity" alt="home">🏠</a> {{vars.this.name}} -- {{vars.this.types}}</h2>
+{% if "File" in vars.this.types %}
+<a href="/files/{{vars.myid}}">Download</a>
+
+{% endif %}
+{% set vars.count = 0 %}
+<table>
+  {% for prop in sql("select name, count(*) as count, source_types from properties where
+  source = ? group by name", [vars.myid]) %} {% set vars.count = vars.count + 1
+  %}
+
+  <tr>
+    <td>{{prop.name}}</td>
+    <td>
+      <table id="prop{{vars.count}}">
+        {% if prop.count > 10 %}
+        <thead>
+          <tr>
+            <th>Value</th>
+          </tr>
+        </thead>
+        {% endif %} 
+        {% for val in sql( "select name, value, target, source_types from
+        properties where source = ? and name = ? ", [vars.myid, prop.name] ) %}
+        <!-- Is this an image we can show?-->
+        {% if prop.name == "encodingFormat" and (val.value == "image/jpeg" or val.value == "image/png")  %}
+            {% set vars.showable = true %}
+        {% endif %}
+        <tr>
+          <td>
+            {% if val.target %}
+            <a href="/browse/entity?entity={{val.target | urlencode}}"
+              >{{val.value}}</a
+            > {{prop.source_types}}
+            {% else %} {{val.value}} {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% if prop.count > 10 %}
+      <script>
+        var props{{ vars.count }} = new DataTable("#prop{{vars.count}}");
+      </script>
+      {% endif %}
+    </td>
+  </tr>
+
+  {% endfor %}
+</table>
+
+{% if vars.showable %}
+<img src="/files/{{vars.myid}}">
+{% endif %}
+<h2>BACK LINKS:</h2>
+<table>
+  {% for prop in sql("select name, count(*) as count from properties where target = ?
+  group by name", [vars.myid]) %}
+  {% set vars.count = vars.count + 1 %}
+  <tr>
+    <td>. &lt---</td>
+    <td>{{prop.name }}</td>
+    <td>
+      <table id="prop{{vars.count}}">
+        {% if prop.count > 10 %}
+        <thead>
+          <tr>
+            <th>Value</th>
+          </tr>
+        </thead>
+        {% endif %} 
+        <tbody>
+          {% for val in sql( "select name, source, source_name, source_types from properties
+          where target = ? and name = ?", [vars.myid, prop.name] ) %}
+          <tr>
+            <td>
+              <a href="/browse/entity?entity={{val.source | urlencode}}"
+                >{{val.source_name}}</a
+              > {{val.source_types}}
+            </td>
+          </tr>
+
+         
+            {% endfor %}
+        </tr>
+        </tbody>
+      </table>
+      {% if prop.count > 10 %}
+      <script>
+        var props{{ vars.count }} = new DataTable("#prop{{vars.count}}");
+      </script>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
