@@ -12,10 +12,11 @@ This experiment is to explore whether it makes sense to use Datasette (or just s
 The initial proof of concept works but there are things to do.
 
 Add search:
--[ ] Full text
--[ ] Metadata (this is a little tricky
+
+-  Full text
+-  Metadata (this is a little tricky
  because of the data model where properties are all separate from entities)
--[ ] Geo
+-  Geo
 
 
 ## Issues
