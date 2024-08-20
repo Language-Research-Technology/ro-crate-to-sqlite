@@ -70,7 +70,7 @@ def build(db, rocrate):
                 })
                 
             e = {
-                "id": entity["@id"],
+                "@id": entity["@id"],
                 "name": entity_name,
                 "types": types
             }     
