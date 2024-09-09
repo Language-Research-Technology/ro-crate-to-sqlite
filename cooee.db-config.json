@@ -1,0 +1,59 @@
+{
+    "tables": {
+        "RepositoryObject": {
+            "all_props": [
+                "conformsTo",
+                "citation.materialType",
+                "citation.isPartOf",
+                "citation.@id",
+                "citation.name",
+                "indexableText",
+                "citation.pageEnd",
+                "communicationMode",
+                "citation.@type",
+                "citation.pageStart",
+                "@id",
+                "citation",
+                "hasPart",
+                "register",
+                "inLanguage",
+                "citation.wordCount",
+                "linguisticGenre",
+                "name",
+                "author",
+                "@type",
+                "dateCreated"
+            ],
+            "ignore_props": [],
+            "expand_props": [
+                "citation"
+            ]
+        },
+        "Person": {
+            "all_props": [
+                "conformsTo",
+                "class",
+                "indexableText",
+                "communicationMode",
+                "@id",
+                "citation",
+                "age",
+                "hasPart",
+                "register",
+                "prov:specializationOf",
+                "inLanguage",
+                "linguisticGenre",
+                "name",
+                "immigration",
+                "author",
+                "birthPlace",
+                "@type",
+                "person",
+                "dateCreated",
+                "birthDate"
+            ],
+            "ignore_props": [],
+            "expand_props": []
+        }
+    }
+}

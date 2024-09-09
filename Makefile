@@ -3,4 +3,4 @@ sample:
 
 
 cooee:
-	venv/bin/python  index.py --db cooee.db  --rocrate test_data/cooee  ; venv/bin/datasette cooee.db --template-dir templates --static files:test_data/cooee
+	venv/bin/python  index.py --db cooee.db  --rocrate test_data/cooee --flatten ;  venv/bin/datasette cooee.db --template-dir templates --static files:test_data/cooee
