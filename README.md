@@ -71,7 +71,7 @@ Try out making a tabular view which joins speaker data with other metadata and f
 SELECT *
 FROM Person 
 JOIN RepositoryObject
-on Person.name = RepositoryObject.author
+on Person."@id" = RepositoryObject.author_id
 
 ```
 

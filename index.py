@@ -160,7 +160,7 @@ def flatten_entities(db, main_config, config_file, rocrate):
                 if property_name in config['expand_props'] and property_target:
                     # Query to get the
                     sub_query = f"""
-                        SELECT p.name, p.value
+                        SELECT p.name, p.value, p.target
                         FROM properties p
                         WHERE p.source = '{property_target.replace("'", "''")}' 
                     """
@@ -177,10 +177,15 @@ def flatten_entities(db, main_config, config_file, rocrate):
                         if expanded_property_name not in config['ignore_props']:
                             setProperty(
                                 entity_data, expanded_property_name,  expanded_prop['value'])
+                            if expanded_prop['target']:
+                                setProperty(
+                                    entity_data, f"{expanded_property_name}_id", expanded_prop['target'])
                 else:
                     # If it's a normal property, just add it to the entity_data dictionary
                     if property_name not in config['ignore_props']:
                         setProperty(entity_data, property_name, property_value)
+                        if property_target:
+                            setProperty(entity_data, f"{property_name}_id", property_target)
 
             config['all_props'] = list(set(config['all_props'] + props))
             # Step 4: Insert the flattened properties into the 'flat_entites' table
