@@ -4,6 +4,7 @@ from sqlite_utils import Database
 import json
 import os
 import re
+import csv
 
 file_path = "your_text_file.txt"
 output_folder = "output_ro_crate/"
@@ -11,11 +12,25 @@ output_folder = "output_ro_crate/"
 # Create an RO-Crate instance
 
 
+import sqlite_utils
+
+def add_csv(db, csv_path, table_name):
+    with open(csv_path, newline='') as f:
+        reader = csv.DictReader(f)  # Use DictReader to read each row as a dictionary
+        rows = list(reader) 
+        if rows:
+            # Insert rows into the table (the table will be created if it doesn't exist)
+            db[table_name].insert_all(rows, pk="id", alter=True, ignore=True)
+            # `pk="id"` assumes there's an 'id' column; if no primary key, you can remove it.
+
+
+
 @click.command()
 @click.option("--db", default="ro-crate-metadata.db", prompt="Database", help="name of the output database")
 @click.option("--rocrate", prompt="Path to RO-Crate directory", help="A path to an RO-Crates directory")
 @click.option("--flatten", is_flag=True, help="Flatten the entities table")
-def build(db, rocrate, flatten=False):
+@click.option("--csv", is_flag=True, help="Treat indexableText as CSV files to be concatenated into a new table")
+def build(db, rocrate, flatten=False, csv=False):
     print("flattening", flatten)
     # File path for the configuration file
     config_file = f'{db}-config.json'
@@ -106,10 +121,10 @@ def build(db, rocrate, flatten=False):
     print("Database built")
     print(data.schema)
     if flatten:
-        flatten_entities(data, config, config_file, rocrate)
+        flatten_entities(data, config, config_file, rocrate, csv)
 
 
-def flatten_entities(db, main_config, config_file, rocrate):
+def flatten_entities(db, main_config, config_file, rocrate, csv):
     print("Building flat tables")
     for table in main_config['tables']:
         # Step 1: Query to get list of @id for entities with @type = table
@@ -145,7 +160,14 @@ def flatten_entities(db, main_config, config_file, rocrate):
                 props.append(property_name)
 
                 if property_name == 'indexableText':
+                    print("indexableText", property_target, property_value)
                     # Check if the value is a valid file name
+
+                    ### HACK: Work around for the fact that the RO-Crate libary does not import File entities it does not like
+                    if not property_target:
+                        p = json.loads(property_value)
+                        property_target = p.get("@id")
+                    
                     text_file = os.path.join(rocrate, property_target)
                     if os.path.isfile(text_file):
                         # Read the text from the file
@@ -153,6 +175,11 @@ def flatten_entities(db, main_config, config_file, rocrate):
                             text = f.read()
                         # Add the text to the entity_data dictionary
                         entity_data[property_name] = text
+                        if csv:
+                            # Check if the text is a CSV file
+                            if text_file.endswith('.csv'):
+                                # Add the CSV file to the database
+                                add_csv(db, text_file, f"{table}_csv")
                     else:
                         print(f"File not found: {text_file}")
 

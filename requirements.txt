@@ -27,7 +27,7 @@ PyYAML==6.0.1
 rdflib==7.0.0
 requests==2.31.0
 requests-toolbelt==1.0.0
-rocrate==0.9.0
+rocrate==0.10.0
 ruamel.yaml==0.18.5
 ruamel.yaml.clib==0.2.8
 schema-salad==8.5.20231201181309
