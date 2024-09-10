@@ -4,7 +4,8 @@ from sqlite_utils import Database
 import json
 import os
 import re
-import csv
+import csv as csvlib
+import pandas as pd
 
 file_path = "your_text_file.txt"
 output_folder = "output_ro_crate/"
@@ -16,24 +17,24 @@ import sqlite_utils
 
 def add_csv(db, csv_path, table_name):
     with open(csv_path, newline='') as f:
-        reader = csv.DictReader(f)  # Use DictReader to read each row as a dictionary
+        reader = csvlib.DictReader(f)  # Use DictReader to read each row as a dictionary
         rows = list(reader) 
         if rows:
             # Insert rows into the table (the table will be created if it doesn't exist)
-            db[table_name].insert_all(rows, pk="id", alter=True, ignore=True)
-            # `pk="id"` assumes there's an 'id' column; if no primary key, you can remove it.
-
+            db[table_name].insert_all(rows,alter=True, ignore=True)
+            print(f"Added {len(rows)} rows to {table_name}")
 
 
 @click.command()
-@click.option("--db", default="ro-crate-metadata.db", prompt="Database", help="name of the output database")
+@click.option("--dbname", default="ro-crate-metadata.db", prompt="Database", help="name of the output database")
 @click.option("--rocrate", prompt="Path to RO-Crate directory", help="A path to an RO-Crates directory")
 @click.option("--flatten", is_flag=True, help="Flatten the entities table")
 @click.option("--csv", is_flag=True, help="Treat indexableText as CSV files to be concatenated into a new table")
-def build(db, rocrate, flatten=False, csv=False):
+
+def build(dbname, rocrate, flatten=False, csv=False):
     print("flattening", flatten)
     # File path for the configuration file
-    config_file = f'{db}-config.json'
+    config_file = f'{dbname}-config.json'
 
     # Load or create the configuration file
     if not os.path.exists(config_file):
@@ -59,11 +60,11 @@ def build(db, rocrate, flatten=False, csv=False):
 
     """Load a list of paths to RO-Crates"""
     print("Building database")
-    data = Database(db, recreate=True)
+    db = Database(dbname, recreate=True)
     # Set up some tables
-    entities = data["entities"]
-    root_table = data["root"]
-    properties = data["properties"].create(
+    entities = db["entities"]
+    root_table = db["root"]
+    properties = db["properties"].create(
         {"source": str, "source_name": str, "source_types": str, "name": str, "target": str, "url": str, "value": str})
 
     crate_path = rocrate
@@ -119,12 +120,11 @@ def build(db, rocrate, flatten=False, csv=False):
                           ("source", "entities", "@id"), ("target", "entities", "@id")])
     root_table.insert({"id": root.properties()["@id"]})
     print("Database built")
-    print(data.schema)
+    print(db.schema)
     if flatten:
-        flatten_entities(data, config, config_file, rocrate, csv)
+        flatten_entities(db, dbname, config, config_file, rocrate, csv)
 
-
-def flatten_entities(db, main_config, config_file, rocrate, csv):
+def flatten_entities(db, dbname, main_config, config_file, rocrate, csv):
     print("Building flat tables")
     for table in main_config['tables']:
         # Step 1: Query to get list of @id for entities with @type = table
@@ -219,11 +219,26 @@ def flatten_entities(db, main_config, config_file, rocrate, csv):
 
             db[f'{table}'].insert(entity_data, pk="@id", replace=True, alter=True),
 
-    print("Flattened entities table created")
     # Save the updated configuration file
     with open(config_file, 'w') as f:
         json.dump(main_config, f, indent=4)
     print(f"Updated config file: {config_file}, edit this file to change the flattening configuration or deleted it to start over")
+    #export "main" csv 
+   
+    # run a query to get the "main" export for this dataset
+    query = main_config['export-query']
+
+    result = list(db.query(query))
+    # Convert result into a CSV file using csv writer
+    csv_file = f"{dbname}-output.csv"
+    with open(csv_file, 'w', newline='') as csvfile:
+        writer = csvlib.DictWriter(csvfile, fieldnames=result[0].keys(), quoting=csvlib.QUOTE_ALL)
+        writer.writeheader()
+        writer.writerows(result)
+
+    print(f"Exported data to {csv_file}")
+
+                
 
 
 def setProperty(entity_data, property_name, property_value):
