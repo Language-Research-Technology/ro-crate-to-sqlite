@@ -5,7 +5,6 @@ import json
 import os
 import re
 import csv as csvlib
-import pandas as pd
 
 file_path = "your_text_file.txt"
 output_folder = "output_ro_crate/"
@@ -232,9 +231,13 @@ def flatten_entities(db, dbname, main_config, config_file, rocrate, csv):
     # Convert result into a CSV file using csv writer
     csv_file = f"{dbname}-output.csv"
     with open(csv_file, 'w', newline='') as csvfile:
-        writer = csvlib.DictWriter(csvfile, fieldnames=result[0].keys(), quoting=csvlib.QUOTE_ALL)
+        writer = csvlib.DictWriter(csvfile, fieldnames=result[0].keys(), quoting=csvlib.QUOTE_MINIMAL)
         writer.writeheader()
-        writer.writerows(result)
+        for row in result:
+            for key, value in row.items():
+                if isinstance(value, str):
+                    row[key] = value.replace('\n', '\\n').replace('\r', '\\r')
+            writer.writerow(row)
 
     print(f"Exported data to {csv_file}")
 
