@@ -14,11 +14,14 @@ output_folder = "output_ro_crate/"
 
 import sqlite_utils
 
-def add_csv(db, csv_path, table_name):
+def add_csv(db, csv_path, table_name, property_target):
     with open(csv_path, newline='') as f:
         reader = csvlib.DictReader(f)  # Use DictReader to read each row as a dictionary
         rows = list(reader) 
         if rows:
+            for row in rows:
+                row['_file_id'] = property_target #ID of the target entity
+            
             # Insert rows into the table (the table will be created if it doesn't exist)
             db[table_name].insert_all(rows,alter=True, ignore=True)
             print(f"Added {len(rows)} rows to {table_name}")
@@ -39,7 +42,10 @@ def build(dbname, rocrate, flatten=False, csv=False):
     if not os.path.exists(config_file):
         # Default configuration
         default_config = {
+            "export-query": "SELECT * FROM RepositoryObject",
+
             "tables": {
+
 
                 "RepositoryObject":  {"all_props": [],  # All properties found for all RepositoryObject entities
                                       "ignore_props": [],  # Properties to ignore
@@ -69,6 +75,7 @@ def build(dbname, rocrate, flatten=False, csv=False):
     crate_path = rocrate
     crate = ROCrate(crate_path)
     root = crate.root_dataset
+    print(root)
 
     # Build the database - entities and properties
     # Entity table contains basic finder and summary information about the entity (this is redundant with the properties table)
@@ -88,7 +95,11 @@ def build(dbname, rocrate, flatten=False, csv=False):
                 url = ""
                 if isinstance(val, dict):
                     this_id = val.get("@id")
-                    t = crate.get(this_id)
+                    try:
+                        t = crate.get(this_id)
+                    except:
+                        t = None
+                        print(f"Could not find {this_id} in {entity['@id']}")
                     if t:
                         target = val.get("@id")
                         value = t.get("name") or val
@@ -155,6 +166,7 @@ def flatten_entities(db, dbname, main_config, config_file, rocrate, csv):
             for prop in properties:
                 property_name = prop['name']
                 property_value = prop['value']
+                #ID of the target entity
                 property_target = prop['target']
                 props.append(property_name)
 
@@ -178,7 +190,7 @@ def flatten_entities(db, dbname, main_config, config_file, rocrate, csv):
                             # Check if the text is a CSV file
                             if text_file.endswith('.csv'):
                                 # Add the CSV file to the database
-                                add_csv(db, text_file, f"{table}_csv")
+                                add_csv(db, text_file, f"{table}_csv", property_target)
                     else:
                         print(f"File not found: {text_file}")
 

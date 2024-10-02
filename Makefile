@@ -9,5 +9,11 @@ f2f:
 	venv/bin/python  index.py --dbname f2f.db  --rocrate test_data/farms-to-freeways --flatten --csv ;  venv/bin/datasette f2f.db --template-dir templates --static files:test_data/farms-to-freeways  --setting facet_suggest_time_limit_ms 500
 
 
+
+native:
+	venv/bin/python  native.py --dbname f2f.db  --rocrate test_data/farms-to-freeways --flatten --csv ;  venv/bin/datasette f2f.db --template-dir templates --static files:test_data/farms-to-freeways  --setting facet_suggest_time_limit_ms 500
+
+
+
 syds:
 	venv/bin/python  index.py --dbname syds.db  --rocrate test_data/ss/SydS --flatten --csv ;  venv/bin/datasette syds.db 
