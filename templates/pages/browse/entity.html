@@ -7,7 +7,7 @@ root_id.id %} {% endfor %} {% endif %}
 {{vars.myid}}
 
 
-{%set vars.this = sql("select name, types from entities where id = ?" , [vars.myid])[0] %}
+{%set vars.this = sql("select name, types from entities where '@id' = ?" , [vars.myid])%}
 
 <!--
 <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
@@ -42,7 +42,7 @@ root_id.id %} {% endfor %} {% endif %}
             <th>Value</th>
           </tr>
         </thead>
-        {% endif %} 
+        {% endif %}
         {% for val in sql( "select name, value, target, source_types from
         properties where source = ? and name = ? ", [vars.myid, prop.name] ) %}
         <!-- Is this an image we can show?-->
@@ -90,7 +90,7 @@ root_id.id %} {% endfor %} {% endif %}
             <th>Value</th>
           </tr>
         </thead>
-        {% endif %} 
+        {% endif %}
         <tbody>
           {% for val in sql( "select name, source, source_name, source_types from properties
           where target = ? and name = ?", [vars.myid, prop.name] ) %}
@@ -102,7 +102,7 @@ root_id.id %} {% endfor %} {% endif %}
             </td>
           </tr>
 
-         
+
             {% endfor %}
         </tr>
         </tbody>

@@ -33,7 +33,7 @@ The initial proof of concept works but there are things to do.
 ## Installation (Macos)
 
 - Make a virtual environment locally:
-  `python3 -venv venv`
+  `python3 -m venv venv`
 - Activate the virtual environment 
   `. venv/bin/activate`
 - Install 
