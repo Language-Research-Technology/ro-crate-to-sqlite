@@ -76,4 +76,13 @@ on Person."@id" = RepositoryObject.author_id
 ```
 
 
+## Example usage as a library
 
+
+```
+import ro_crate_to_sqlite
+```
+
+```
+ro_crate_to_sqlite.build('cooee','test_data/cooee', flatten=True, csv=True)
+```
